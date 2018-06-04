@@ -3,34 +3,33 @@ DBFZ_TSE tournament results parser file
 """
 import pdb
 import os
-import pandas as pd
+import time
+
+CHAR_ROSTER = ['Adult Gohan', 'Android #16', 'Android #18', 'Android #21',
+        'Bardock', 'Beerus', 'Broly', 'Captain Ginyu', 'Cell', 'Frieza',
+        'Teen Gohan', 'Blue Goku', 'Goku', 'Goku Black', 'Gotenks', 'Hit',
+        'Kid Buu', 'Krillin', 'Majin Buu', 'Nappa', 'Piccolo', 'Tien',
+        'Trunks', 'Blue Vegeta', 'Vegeta', 'Vegito', 'Yamcha', 'Zamasu']
 
 def eh_data_parser(file_path):
     """Parses tournament results from eventhubs saved onto txt files
     into usable format for engine.
     :output: list of lists of tourney names, a dictionary of character names,
         serving as the keys for a list of # of games won, played, appearances,
-        and list of placings for each character for each tournament.
+        a list of placings for each character for each tournament, and a list
+        of partners used for each character.
     """
+    start_time = time.time()
     result = []
     file_name_list = os.listdir(file_path)
     for file_name in file_name_list:
         # {character name: games won, games played,
-        #               appearances, [all placings]}
-        character_dict = {
-                'Adult Gohan' : [0, 0, 0, []], 'Android #16' : [0, 0, 0, []],
-                'Android #18' : [0, 0, 0, []], 'Android #21' : [0, 0, 0, []],
-                'Bardock' : [0, 0, 0, []], 'Beerus' : [0, 0, 0, []],
-                'Broly' : [0, 0, 0, []], 'Captain Ginyu' : [0, 0, 0, []],
-                'Cell' : [0, 0, 0, []], 'Frieza' : [0, 0, 0, []],
-                'Teen Gohan' : [0, 0, 0, []], 'Blue Goku' : [0, 0, 0, []],
-                'Goku' : [0, 0, 0, []], 'Goku Black' : [0, 0, 0, []],
-                'Gotenks' : [0, 0, 0, []], 'Hit' : [0, 0, 0, []],
-                'Kid Buu' : [0, 0, 0, []], 'Krillin' : [0, 0, 0, []],
-                'Majin Buu' : [0, 0, 0, []], 'Nappa' : [0, 0, 0, []],
-                'Piccolo' : [0, 0, 0, []], 'Tien' : [0, 0, 0, []],
-                'Trunks' : [0, 0, 0, []], 'Blue Vegeta' : [0, 0, 0, []],
-                'Vegeta' : [0, 0, 0, []], 'Yamcha' : [0, 0, 0, []]}
+        #               appearances, [all placings], [partners]}
+        character_dict = {}
+        # enumerating dict entries for each character
+        for char in CHAR_ROSTER:
+            character_dict[char] = [0, 0, 0, [], []]
+        # opening and formatting raw data
         text_file = open(file_path+file_name, "r")
         raw_lines = text_file.readlines()
         lines = list(map(lambda x: x[:-1], raw_lines))  # removing '/n'
@@ -47,13 +46,18 @@ def eh_data_parser(file_path):
             # formatting into a list
             team = team_string.split(',')
             # removing extra spaces
-            team[1] = team[1][1:]
-            team[2] = team[2][1:]
+            length = len(team)
+            for i in range(1, length):
+                team[i] = team[i][1:]
             for char in team:
                 # incrementing appearance counter
                 character_dict[char][2] += 1
                 # adding placing to list of placings
                 character_dict[char][3].append(place)
+                # adding partners to list of partners
+                for other_char in team:
+                    if char != other_char:
+                        character_dict[char][4].append(other_char)
         
         for battle in battle_log:
             first_team_score = int(battle[-4])
@@ -82,19 +86,23 @@ def eh_data_parser(file_path):
             first_team = first_team_string.split(',')
             second_team = second_team_string.split(',')
             # removing extra spaces
-            first_team[1] = first_team[1][1:]
-            first_team[2] = first_team[2][1:]
-            second_team[1] = second_team[1][1:]
-            second_team[2] = second_team[2][1:]
-            for i in range (3):
+            first_length = len(first_team)
+            second_length = len(second_team)
+            for j in range(1, first_length):
+                first_team[j] = first_team[j][1:]
+            for k in range(1, second_length):
+                second_team[k] = second_team[k][1:]
+            for l in range (3):
                 # adding games won to sum of games won
-                character_dict[first_team[i]][0] += first_team_score
-                character_dict[second_team[i]][0] += second_team_score
+                character_dict[first_team[l]][0] += first_team_score
+                character_dict[second_team[l]][0] += second_team_score
                 # adding games played to sum of games played
-                character_dict[first_team[i]][1] += games_played
-                character_dict[second_team[i]][1] += games_played
+                character_dict[first_team[l]][1] += games_played
+                character_dict[second_team[l]][1] += games_played
 
         result.append([file_name, character_dict])
+    print(str(time.time() - start_time) + ' seconds long')
+    
     return result
 
 def main():

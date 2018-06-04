@@ -29,6 +29,13 @@ class Character:
         self.total_games_won += games_won
         self.total_games_played += games_played
 
+    def update_appearances(self, tourney_name, num_appearances):
+        """Adds new entry into appearances dict, where the key is the
+        tournament name and the value is the number of times a character
+        was included in a team at tournament in question.
+        """
+        self.appearances[tourney_name] = num_appearances
+
     def update_score(self, placings):
         """Adds appropriate placing points to placing score according to
         input placing and placing points dictionary.
@@ -36,6 +43,11 @@ class Character:
         for p in placings:
             placing_score = placing_points_dict[p]
             self.placing_score += placing_score
+
+    def add_partners(self, new_partners):
+        """Adds new partners to list of known partners.
+        """
+        self.partners = self.partners + new_partners
 
     def calc_win_percentage(self):
         """Calculates win percentage of character and returns percentage
@@ -57,7 +69,7 @@ class Character:
 
     def __repr__(self):
         return "Name: " + self.name + '\n' +\
-                "Placing Score: " + self.placing_score + '\n' +\
+                "Placing Score: " + str(self.placing_score) + '\n' +\
                 "Win Percentage: " + str(self.calc_win_percentage()) + "%\n" +\
                 "Two Most Common Partners: " + \
                     self.most_common_partners()[0] + " and " +\
